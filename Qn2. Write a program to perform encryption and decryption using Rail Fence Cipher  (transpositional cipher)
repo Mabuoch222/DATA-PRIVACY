@@ -1,0 +1,61 @@
+def rail_fence_encrypt(text, rails):
+    """Encrypt text using Rail Fence Cipher"""
+    if rails <= 1:
+        return text
+    
+    fence = [[] for _ in range(rails)]
+    rail, direction = 0, 1
+    
+    for char in text:
+        fence[rail].append(char)
+        rail += direction
+        if rail == 0 or rail == rails - 1:
+            direction = -direction
+    
+    return ''.join(''.join(row) for row in fence)
+
+def rail_fence_decrypt(ciphertext, rails):
+    """Decrypt text using Rail Fence Cipher"""
+    if rails <= 1:
+        return ciphertext
+    
+    # Create fence pattern
+    fence = [[] for _ in range(rails)]
+    rail, direction = 0, 1
+    
+    for _ in ciphertext:
+        fence[rail].append(None)
+        rail += direction
+        if rail == 0 or rail == rails - 1:
+            direction = -direction
+    
+    # Fill with ciphertext
+    idx = 0
+    for i in range(rails):
+        for j in range(len(fence[i])):
+            fence[i][j] = ciphertext[idx]
+            idx += 1
+    
+    # Read zigzag to get plaintext
+    result = []
+    rail, direction = 0, 1
+    
+    for _ in ciphertext:
+        result.append(fence[rail].pop(0))
+        rail += direction
+        if rail == 0 or rail == rails - 1:
+            direction = -direction
+    
+    return ''.join(result)
+
+# Example usage
+if __name__ == "__main__":
+    text = "HELLO WORLD"
+    rails = 3
+    
+    encrypted = rail_fence_encrypt(text, rails)
+    decrypted = rail_fence_decrypt(encrypted, rails)
+    
+    print(f"Original:  {text}")
+    print(f"Encrypted: {encrypted}")
+    print(f"Decrypted: {decrypted}")
