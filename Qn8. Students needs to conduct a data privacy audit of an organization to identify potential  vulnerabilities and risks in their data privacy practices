@@ -1,0 +1,134 @@
+import os
+import json
+import datetime
+
+# Define audit categories
+audit_criteria = {
+    "data_collection": [
+        "Are users informed about data collection?",
+        "Is data collection limited to what's necessary?",
+        "Are consent mechanisms in place?"
+    ],
+    "data_storage": [
+        "Is data encrypted at rest?",
+        "Is sensitive data stored securely?",
+        "Are backup policies in place?"
+    ],
+    "data_access": [
+        "Is access to data restricted based on roles?",
+        "Are access logs maintained and monitored?",
+        "Are strong authentication mechanisms used?"
+    ],
+    "compliance": [
+        "Is the organization GDPR compliant?",
+        "Are data retention policies clearly defined?",
+        "Is there a process for handling data subject requests?"
+    ]
+}
+
+# Sample responses for vulnerabilities
+responses = {}
+
+def collect_responses():
+    """
+    This function collects responses from the user for the data privacy audit.
+    It asks the user to answer questions related to various audit categories.
+    The responses are validated to ensure that only 'Yes' or 'No' answers are accepted.
+    """
+    print("Starting Data Privacy Audit...\n")
+    for category, questions in audit_criteria.items():
+        print(f"Category: {category.upper()}")
+        category_responses = []
+        for question in questions:
+            response = input(f" - {question} (Yes/No): ").strip().lower()
+            while response not in ["yes", "no"]:
+                print("Please enter 'Yes' or 'No'.")
+                response = input(f" - {question} (Yes/No): ").strip().lower()
+            category_responses.append({"question": question, "response": response})
+        responses[category] = category_responses
+        print("\n")
+
+def analyze_responses():
+    """
+    This function analyzes the responses and identifies vulnerabilities.
+    It checks if any answers are 'No' (indicating a vulnerability) and stores them.
+    """
+    print("\nAnalyzing Responses...\n")
+    vulnerabilities = {}
+    for category, answers in responses.items():
+        category_vulnerabilities = [item["question"] for item in answers if item["response"] == "no"]
+        vulnerabilities[category] = category_vulnerabilities
+
+    return vulnerabilities
+
+def generate_report(vulnerabilities):
+    """
+    This function generates an audit report in JSON format, including the timestamp,
+    audit results (responses), and identified vulnerabilities. The report is saved to a file.
+    """
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    report_filename = f"data_privacy_audit_report_{timestamp}.json"
+
+    report_content = {
+        "timestamp": timestamp,
+        "audit_results": responses,
+        "vulnerabilities": vulnerabilities
+    }
+
+    with open(report_filename, "w") as report_file:
+        json.dump(report_content, report_file, indent=4)
+
+    print(f"\nAudit report generated: {report_filename}")
+    return report_filename
+
+def display_summary(vulnerabilities):
+    """
+    This function displays a summary of the vulnerabilities found during the audit.
+    It shows how many issues were identified in each category.
+    """
+    print("\nSummary of Findings:")
+    for category, issues in vulnerabilities.items():
+        print(f" - {category.upper()}: {len(issues)} issues identified.")
+        for issue in issues:
+            print(f"   * {issue}")
+
+# Main script execution
+if __name__ == "__main__":
+    collect_responses()  # Collect responses for the audit
+    vulnerabilities = analyze_responses()  # Analyze the responses for vulnerabilities
+    display_summary(vulnerabilities)  # Display a summary of the vulnerabilities found
+    generate_report(vulnerabilities)  # Generate the audit report and save it to a file
+
+"""
+Explanation:
+1. **Audit Categories**:
+   - The audit criteria are defined across various categories such as data collection, storage, access, and compliance with regulations (e.g., GDPR).
+   - Each category has a set of questions that help evaluate the organization's data privacy practices.
+
+2. **Collecting Responses**:
+   - The `collect_responses` function asks the user a series of questions based on the predefined audit criteria.
+   - The responses must be either "Yes" or "No". If the user provides any other answer, the input is re-asked until a valid response is given.
+
+3. **Analyzing Responses**:
+   - The `analyze_responses` function identifies vulnerabilities by looking for 'No' responses, indicating areas where the organization may have weaknesses in its data privacy practices.
+   
+4. **Generating the Report**:
+   - The `generate_report` function generates a JSON file with the audit results, including the timestamp of the audit and a list of identified vulnerabilities.
+   - This report is saved to a file with a unique name based on the current timestamp.
+
+5. **Displaying the Summary**:
+   - The `display_summary` function provides a quick overview of how many issues were identified in each audit category, along with the specific questions that were answered "No".
+
+6. **Security and Compliance**:
+   - This audit checks for basic security measures and compliance with regulations like GDPR, helping organizations ensure their data privacy practices are robust.
+
+Complexity Analysis:
+1. **Time Complexity**:
+   - The time complexity of collecting responses is O(m * n), where 'm' is the number of categories and 'n' is the number of questions per category.
+   - The complexity of analyzing responses and generating the report is O(m * n), as it involves iterating over each question and response.
+
+2. **Space Complexity**:
+   - The space complexity is O(m * n), as the responses and vulnerabilities are stored in dictionaries and lists.
+   
+Note: This is a basic data privacy audit tool. In real-world applications, the audit process would be more extensive, potentially involving automated checks and integration with security systems.
+"""
