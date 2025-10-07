@@ -1,0 +1,69 @@
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+
+# Generate a pair of private and public keys
+private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+public_key = private_key.public_key()
+
+# The message/document to be signed
+document = b"This is a sensitive document."
+
+# Sign the document
+signature = private_key.sign(
+    document,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),  # Mask Generation Function with SHA-256
+        salt_length=padding.PSS.MAX_LENGTH  # Maximum length for the salt
+    ),
+    hashes.SHA256()  # Hash algorithm used for the signature
+)
+
+print("Document signed successfully.")
+
+# Verify the signature
+try:
+    # Verify the signature using the public key
+    public_key.verify(
+        signature,
+        document,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),  # Mask Generation Function with SHA-256
+            salt_length=padding.PSS.MAX_LENGTH  # Maximum length for the salt
+        ),
+        hashes.SHA256()  # Hash algorithm used for verification
+    )
+    print("Signature verified successfully.")
+except Exception as e:
+    print("Verification failed:", e)
+
+"""
+Explanation:
+1. **RSA Key Generation**:
+   - RSA keys are generated using the `rsa.generate_private_key()` function, which produces a private key and its corresponding public key.
+   - The `public_exponent` is set to 65537, which is a common choice for RSA keys. The `key_size` is 2048 bits, ensuring good security.
+
+2. **Signing the Document**:
+   - The document (in this case, a sensitive string) is signed using the `private_key.sign()` method.
+   - The padding scheme used is PSS (Probabilistic Signature Scheme), which is considered more secure than the traditional PKCS#1 padding.
+   - The signature is generated using SHA-256 as the hash function.
+
+3. **Verifying the Signature**:
+   - The signature is verified using the corresponding `public_key.verify()` method.
+   - The verification ensures that the signature matches the document and confirms the authenticity of the message.
+
+4. **Error Handling**:
+   - If the verification fails (e.g., the signature does not match the document), an exception is raised, and the error message is printed.
+
+5. **Security**:
+   - RSA with PSS padding and SHA-256 hashing provides a strong cryptographic guarantee of both authenticity and integrity for the signed document.
+   - The private key should be kept secure, as anyone with access to the private key can sign documents on behalf of the owner.
+
+Complexity Analysis:
+1. **Time Complexity**:
+   - The time complexity of RSA signing and verification operations is O(n^3) with respect to the key size, where 'n' is the bit length of the RSA keys (2048 bits in this case). This is due to the modular exponentiation involved in both signing and verifying.
+   
+2. **Space Complexity**:
+   - The space complexity is O(1) as only fixed-size objects (signature, keys) are stored, and their size is determined by the RSA key length (2048 bits).
+   
+Note: In practical applications, RSA signing is often used in conjunction with digital certificates to provide identity verification. It is important to protect the private key from unauthorized access.
+"""
