@@ -1,0 +1,339 @@
+import json
+import datetime
+from typing import Dict, List, Any
+
+class DataProtectionCompliancePlanner:
+    """
+    A comprehensive tool for assessing and planning GDPR compliance
+    """
+    
+    def __init__(self):
+        self.assessment_results = {}
+        self.compliance_plan = {}
+        self.organization_info = {}
+        
+    def collect_organization_info(self):
+        """Collect basic information about the organization"""
+        print("=== Organization Information ===")
+        self.organization_info = {
+            'name': input("Organization Name: "),
+            'industry': input("Industry: "),
+            'size': input("Organization Size (employees): "),
+            'data_processor': self.get_yes_no("Do you process personal data? "),
+            'data_controller': self.get_yes_no("Do you determine purposes of data processing? "),
+            'eu_customers': self.get_yes_no("Do you have customers in EU? "),
+            'employee_data': self.get_yes_no("Do you process employee data? ")
+        }
+    
+    def get_yes_no(self, question: str) -> bool:
+        """Get yes/no input from user"""
+        while True:
+            response = input(question).lower()
+            if response in ['y', 'yes']:
+                return True
+            elif response in ['n', 'no']:
+                return False
+            else:
+                print("Please enter 'y' or 'n'")
+    
+    def conduct_gdpr_assessment(self):
+        """Conduct comprehensive GDPR compliance assessment"""
+        print("\n=== GDPR Compliance Assessment ===")
+        
+        assessment_areas = {
+            'data_mapping': {
+                'title': 'Data Mapping & Inventory',
+                'questions': [
+                    "Have you documented all personal data processing activities?",
+                    "Do you maintain a Record of Processing Activities (ROPA)?",
+                    "Have you identified data flows between systems and third parties?"
+                ]
+            },
+            'lawful_basis': {
+                'title': 'Lawful Basis for Processing',
+                'questions': [
+                    "Have you identified lawful basis for each processing activity?",
+                    "Do you obtain explicit consent when required?",
+                    "Do you document consent management processes?"
+                ]
+            },
+            'individual_rights': {
+                'title': 'Individual Rights',
+                'questions': [
+                    "Can you respond to data access requests within 30 days?",
+                    "Do you have processes for data rectification and erasure?",
+                    "Can you provide data portability upon request?"
+                ]
+            },
+            'data_security': {
+                'title': 'Data Security',
+                'questions': [
+                    "Do you implement appropriate technical security measures?",
+                    "Have you conducted Data Protection Impact Assessments (DPIAs)?",
+                    "Do you have a process for reporting data breaches within 72 hours?"
+                ]
+            },
+            'third_party': {
+                'title': 'Third-Party Management',
+                'questions': [
+                    "Do you have Data Processing Agreements with vendors?",
+                    "Do you conduct due diligence on data processors?",
+                    "Do you monitor third-party compliance?"
+                ]
+            },
+            'policies': {
+                'title': 'Policies & Documentation',
+                'questions': [
+                    "Do you have a comprehensive Privacy Policy?",
+                    "Have you appointed a Data Protection Officer (if required)?",
+                    "Do you maintain documentation of compliance efforts?"
+                ]
+            }
+        }
+        
+        self.assessment_results = {}
+        
+        for area, details in assessment_areas.items():
+            print(f"\n--- {details['title']} ---")
+            area_score = 0
+            responses = []
+            
+            for i, question in enumerate(details['questions'], 1):
+                response = self.get_yes_no(f"{i}. {question} (y/n): ")
+                responses.append(response)
+                if response:
+                    area_score += 1
+            
+            compliance_percentage = (area_score / len(details['questions'])) * 100
+            self.assessment_results[area] = {
+                'score': area_score,
+                'total': len(details['questions']),
+                'percentage': compliance_percentage,
+                'responses': responses,
+                'status': self.get_status(compliance_percentage)
+            }
+    
+    def get_status(self, percentage: float) -> str:
+        """Get compliance status based on percentage"""
+        if percentage >= 80:
+            return "Compliant"
+        elif percentage >= 60:
+            return "Partially Compliant"
+        else:
+            return "Non-Compliant"
+    
+    def generate_compliance_plan(self):
+        """Generate actionable compliance plan based on assessment"""
+        print("\n=== Generating Compliance Plan ===")
+        
+        action_plan = {
+            'data_mapping': [
+                "Create Data Inventory: Document all personal data processing activities",
+                "Develop Data Flow Maps: Visualize data movement across systems",
+                "Maintain ROPA: Keep Records of Processing Activities updated"
+            ],
+            'lawful_basis': [
+                "Document Lawful Basis: Specify legal basis for each processing activity",
+                "Implement Consent Management: Create processes for obtaining/managing consent",
+                "Review Legitimate Interests: Document legitimate interest assessments"
+            ],
+            'individual_rights': [
+                "Create DSAR Process: Establish Data Subject Access Request procedures",
+                "Develop Right to Erasure: Implement processes for data deletion requests",
+                "Build Data Portability: Enable data export capabilities"
+            ],
+            'data_security': [
+                "Conduct DPIAs: Perform Data Protection Impact Assessments for high-risk processing",
+                "Implement Security Controls: Deploy encryption, access controls, and monitoring",
+                "Create Breach Response: Develop 72-hour breach notification process"
+            ],
+            'third_party': [
+                "Review Vendor Contracts: Ensure Data Processing Agreements are in place",
+                "Conduct Vendor Assessments: Evaluate third-party data protection practices",
+                "Monitor Compliance: Regularly review vendor security and privacy practices"
+            ],
+            'policies': [
+                "Update Privacy Policy: Ensure comprehensive and transparent privacy notice",
+                "Appoint DPO: Designate Data Protection Officer if required",
+                "Document Compliance: Maintain records of all compliance activities"
+            ]
+        }
+        
+        self.compliance_plan = {
+            'high_priority': [],
+            'medium_priority': [],
+            'low_priority': []
+        }
+        
+        for area, result in self.assessment_results.items():
+            if result['percentage'] < 60:
+                priority = 'high_priority'
+            elif result['percentage'] < 80:
+                priority = 'medium_priority'
+            else:
+                priority = 'low_priority'
+            
+            self.compliance_plan[priority].extend([
+                (area, action) for action in action_plan[area]
+            ])
+    
+    def generate_report(self):
+        """Generate comprehensive compliance report"""
+        print("\n" + "="*60)
+        print("DATA PROTECTION COMPLIANCE REPORT")
+        print("="*60)
+        
+        # Organization Info
+        print(f"\nOrganization: {self.organization_info.get('name', 'N/A')}")
+        print(f"Industry: {self.organization_info.get('industry', 'N/A')}")
+        print(f"Assessment Date: {datetime.datetime.now().strftime('%Y-%m-%d')}")
+        
+        # Overall Compliance Score
+        total_score = sum(result['score'] for result in self.assessment_results.values())
+        total_questions = sum(result['total'] for result in self.assessment_results.values())
+        overall_compliance = (total_score / total_questions) * 100
+        
+        print(f"\nOverall Compliance: {overall_compliance:.1f}%")
+        print(f"Status: {self.get_status(overall_compliance)}")
+        
+        # Detailed Assessment Results
+        print("\n--- DETAILED ASSESSMENT RESULTS ---")
+        for area, result in self.assessment_results.items():
+            print(f"\n{area.replace('_', ' ').title()}:")
+            print(f"  Score: {result['score']}/{result['total']} ({result['percentage']:.1f}%)")
+            print(f"  Status: {result['status']}")
+        
+        # Compliance Plan
+        print("\n--- COMPLIANCE ACTION PLAN ---")
+        
+        print("\nHIGH PRIORITY ACTIONS (Address immediately):")
+        for i, (area, action) in enumerate(self.compliance_plan['high_priority'], 1):
+            print(f"  {i}. [{area.replace('_', ' ').title()}] {action}")
+        
+        print("\nMEDIUM PRIORITY ACTIONS (Address within 3 months):")
+        for i, (area, action) in enumerate(self.compliance_plan['medium_priority'], 1):
+            print(f"  {i}. [{area.replace('_', ' ').title()}] {action}")
+        
+        print("\nLOW PRIORITY ACTIONS (Maintain and improve):")
+        for i, (area, action) in enumerate(self.compliance_plan['low_priority'], 1):
+            print(f"  {i}. [{area.replace('_', ' ').title()}] {action}")
+        
+        # Recommendations
+        print("\n--- KEY RECOMMENDATIONS ---")
+        recommendations = [
+            "Establish a cross-functional data protection team",
+            "Conduct regular employee training on data protection",
+            "Implement privacy by design in new projects",
+            "Schedule quarterly compliance reviews",
+            "Maintain documentation for all data processing activities"
+        ]
+        
+        for i, recommendation in enumerate(recommendations, 1):
+            print(f"  {i}. {recommendation}")
+    
+    def save_report(self, filename: str):
+        """Save report to JSON file"""
+        report_data = {
+            'organization': self.organization_info,
+            'assessment_date': datetime.datetime.now().isoformat(),
+            'assessment_results': self.assessment_results,
+            'compliance_plan': self.compliance_plan
+        }
+        
+        try:
+            with open(filename, 'w') as f:
+                json.dump(report_data, f, indent=2)
+            print(f"\nReport saved to {filename}")
+        except Exception as e:
+            print(f"Error saving report: {e}")
+    
+    def run_compliance_assessment(self):
+        """Main method to run the complete compliance assessment"""
+        print("Data Protection Regulation Compliance Planner")
+        print("GDPR Compliance Assessment Tool")
+        print("="*50)
+        
+        # Step 1: Collect organization information
+        self.collect_organization_info()
+        
+        # Step 2: Conduct assessment
+        self.conduct_gdpr_assessment()
+        
+        # Step 3: Generate compliance plan
+        self.generate_compliance_plan()
+        
+        # Step 4: Generate and display report
+        self.generate_report()
+        
+        # Step 5: Save report
+        save_file = input("\nSave report to file? (y/n): ").lower()
+        if save_file in ['y', 'yes']:
+            filename = input("Enter filename (default: compliance_report.json): ") or "compliance_report.json"
+            self.save_report(filename)
+
+
+# Additional utility functions
+def quick_compliance_checklist():
+    """Quick GDPR compliance checklist"""
+    checklist = [
+        "✓ Lawful basis for processing documented",
+        "✓ Privacy notice provided to data subjects",
+        "✓ Data subject rights processes established",
+        "✓ Data protection by design implemented",
+        "✓ Data Processing Agreements with vendors",
+        "✓ International transfer mechanisms in place",
+        "✓ Data breach response plan ready",
+        "✓ DPO appointed (if required)",
+        "✓ Records of Processing Activities maintained",
+        "✓ Data Protection Impact Assessments conducted"
+    ]
+    
+    print("\nQuick GDPR Compliance Checklist:")
+    for item in checklist:
+        print(f"  {item}")
+
+
+def data_protection_principles():
+    """Display core data protection principles"""
+    principles = [
+        "1. Lawfulness, fairness and transparency",
+        "2. Purpose limitation",
+        "3. Data minimization", 
+        "4. Accuracy",
+        "5. Storage limitation",
+        "6. Integrity and confidentiality",
+        "7. Accountability"
+    ]
+    
+    print("\nCore Data Protection Principles (GDPR Article 5):")
+    for principle in principles:
+        print(f"  {principle}")
+
+
+# Main execution
+if __name__ == "__main__":
+    planner = DataProtectionCompliancePlanner()
+    
+    print("Data Protection Regulation Compliance Tool")
+    print("=" * 50)
+    
+    while True:
+        print("\nOptions:")
+        print("1. Run Full Compliance Assessment")
+        print("2. Quick Compliance Checklist")
+        print("3. View Data Protection Principles") 
+        print("4. Exit")
+        
+        choice = input("\nSelect option (1-4): ").strip()
+        
+        if choice == '1':
+            planner.run_compliance_assessment()
+        elif choice == '2':
+            quick_compliance_checklist()
+        elif choice == '3':
+            data_protection_principles()
+        elif choice == '4':
+            print("Exiting program. Ensure ongoing compliance monitoring!")
+            break
+        else:
+            print("Invalid choice. Please select 1-4.")
