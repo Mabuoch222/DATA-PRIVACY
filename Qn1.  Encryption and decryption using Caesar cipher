@@ -62,13 +62,12 @@ class CaesarCipher:
         
         return ''.join(result)
     
-    def brute_force_decrypt(self, encrypted_text, language='english'):
+    def brute_force_decrypt(self, encrypted_text):
         """
         Attempt to decrypt without knowing the shift by trying all possibilities
         
         Args:
             encrypted_text (str): The encrypted text
-            language (str): Language for frequency analysis hints
         
         Returns:
             dict: All possible decryptions with their shift values
@@ -76,7 +75,9 @@ class CaesarCipher:
         results = {}
         
         for shift in range(26):
-            decrypted = self._transform(encrypted_text, -shift)
+            # Create temporary cipher with each shift value
+            temp_cipher = CaesarCipher(shift)
+            decrypted = temp_cipher.decrypt(encrypted_text)
             results[shift] = decrypted
         
         return results
@@ -90,6 +91,15 @@ class CaesarCipher:
         """
         self.shift = new_shift % 26
 
+    def get_shift(self):
+        """
+        Get current shift value
+        
+        Returns:
+            int: Current shift value
+        """
+        return self.shift
+
 # Example usage of the class
 def demo_caesar_class():
     """Demonstrate the CaesarCipher class"""
@@ -101,6 +111,7 @@ def demo_caesar_class():
     encrypted = cipher.encrypt(original_text)
     print(f"Original:  {original_text}")
     print(f"Encrypted: {encrypted}")
+    print(f"Current shift: {cipher.get_shift()}")
     
     # Decryption
     decrypted = cipher.decrypt(encrypted)
@@ -111,20 +122,20 @@ def demo_caesar_class():
     brute_results = cipher.brute_force_decrypt(encrypted)
     
     for shift, text in brute_results.items():
-        if shift == cipher.shift:
-            print(f"Shift {shift:2d}: {text}  <-- CORRECT")
+        if shift == cipher.get_shift():
+            print(f"Shift {shift:2d}: {text}  <-- CORRECT (Original shift)")
         else:
             print(f"Shift {shift:2d}: {text}")
 
-# Interactive version
+# Corrected Interactive version
 def interactive_caesar_cipher():
     """
     Interactive version that allows user to choose encryption/decryption
     """
     print("=== Caesar Cipher Tool ===")
     print("1. Encrypt text")
-    print("2. Decrypt text")
-    print("3. Brute force decryption")
+    print("2. Decrypt text (knowing shift)")
+    print("3. Brute force decryption (unknown shift)")
     print("4. Exit")
     
     while True:
@@ -133,23 +144,28 @@ def interactive_caesar_cipher():
             
             if choice == '1':
                 text = input("Enter text to encrypt: ")
-                shift = int(input("Enter shift value: "))
-                encrypted = caesar_encrypt(text, shift)
+                shift = int(input("Enter shift value (0-25): "))
+                cipher = CaesarCipher(shift)
+                encrypted = cipher.encrypt(text)
                 print(f"Encrypted text: {encrypted}")
+                print(f"Used shift: {shift}")
                 
             elif choice == '2':
                 text = input("Enter text to decrypt: ")
-                shift = int(input("Enter shift value: "))
-                decrypted = caesar_decrypt(text, shift)
+                shift = int(input("Enter shift value (0-25): "))
+                cipher = CaesarCipher(shift)
+                decrypted = cipher.decrypt(text)
                 print(f"Decrypted text: {decrypted}")
+                print(f"Used shift: {shift}")
                 
             elif choice == '3':
                 text = input("Enter text to brute force decrypt: ")
+                cipher = CaesarCipher()  # Default shift
                 print("\nTrying all possible shifts:")
                 print("-" * 50)
                 
-                for shift in range(26):
-                    decrypted = caesar_decrypt(text, shift)
+                brute_results = cipher.brute_force_decrypt(text)
+                for shift, decrypted in brute_results.items():
                     print(f"Shift {shift:2d}: {decrypted}")
                     
             elif choice == '4':
@@ -160,14 +176,14 @@ def interactive_caesar_cipher():
                 print("Invalid choice. Please enter 1-4.")
                 
         except ValueError:
-            print("Please enter a valid number for shift.")
+            print("Please enter a valid number for shift (0-25).")
         except KeyboardInterrupt:
             print("\nProgram interrupted. Goodbye!")
             break
         except Exception as e:
             print(f"An error occurred: {e}")
 
-# Additional utility functions
+# Additional utility functions (corrected)
 def analyze_frequency(text):
     """
     Analyze character frequency in text (useful for cryptanalysis)
@@ -191,36 +207,90 @@ def analyze_frequency(text):
         for char in frequency:
             frequency[char] = (frequency[char] / total_chars) * 100
     
-    return frequency
+    # Sort by frequency (descending)
+    sorted_frequency = dict(sorted(frequency.items(), key=lambda x: x[1], reverse=True))
+    return sorted_frequency
 
 def save_to_file(filename, content):
     """Save content to a file"""
-    with open(filename, 'w') as f:
-        f.write(content)
-    print(f"Content saved to {filename}")
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"Content successfully saved to {filename}")
+    except Exception as e:
+        print(f"Error saving to file: {e}")
 
 def read_from_file(filename):
     """Read content from a file"""
-    with open(filename, 'r') as f:
-        return f.read()
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"Error: File {filename} not found.")
+        return ""
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return ""
+
+# Test function to verify correctness
+def test_caesar_cipher():
+    """Test the Caesar cipher implementation for correctness"""
+    print("=== Testing Caesar Cipher ===")
+    
+    test_cases = [
+        ("HELLO", 3, "KHOOR"),
+        ("hello", 3, "khoor"),
+        ("Hello, World!", 7, "Olssv, Dvysk!"),
+        ("XYZ", 3, "ABC"),  # Wrap-around test
+        ("abc", 25, "zab"), # Wrap-around test
+    ]
+    
+    cipher = CaesarCipher()
+    
+    for original, shift, expected_encrypted in test_cases:
+        cipher.set_shift(shift)
+        encrypted = cipher.encrypt(original)
+        decrypted = cipher.decrypt(encrypted)
+        
+        print(f"Test: '{original}' with shift {shift}")
+        print(f"  Encrypted: '{encrypted}' (expected: '{expected_encrypted}')")
+        print(f"  Decrypted: '{decrypted}'")
+        
+        if encrypted == expected_encrypted and decrypted == original:
+            print("  ✓ PASS")
+        else:
+            print("  ✗ FAIL")
+        print()
 
 # Main program
 if __name__ == "__main__":
     print("Caesar Cipher Program")
     print("=" * 30)
     
+    # Run tests first
+    test_caesar_cipher()
+    
     # Simple demonstration
     print("\n--- Simple Demo ---")
     text = "Caesar Cipher Demonstration"
     shift = 7
     
-    encrypted = caesar_encrypt(text, shift)
-    decrypted = caesar_decrypt(encrypted, shift)
+    cipher = CaesarCipher(shift)
+    encrypted = cipher.encrypt(text)
+    decrypted = cipher.decrypt(encrypted)
     
     print(f"Original:  {text}")
     print(f"Shift:     {shift}")
     print(f"Encrypted: {encrypted}")
     print(f"Decrypted: {decrypted}")
+    
+    # Frequency analysis example
+    print("\n--- Frequency Analysis ---")
+    sample_text = "This is a sample text for frequency analysis demonstration."
+    freq = analyze_frequency(sample_text)
+    print("Character frequencies:")
+    for char, percentage in list(freq.items())[:5]:  # Show top 5
+        print(f"  {char}: {percentage:.1f}%")
     
     # Class demonstration
     print("\n--- Class-Based Demo ---")
